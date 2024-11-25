@@ -1,0 +1,56 @@
+sql
+--Create NYC Taxi View
+SELECT pickup_time,
+       TO_DATE(pickup_date, 'YYYY-MM-DD', 1) AS pickup_date,
+       passenger_count,
+       trip_distance,
+       fare_amount,
+       trip_amount,
+       total_amount
+FROM   (SELECT TO_TIME(pickup_time, 'HH24:MI:SS', 1) AS pickup_time,
+               pickup_date,
+               passenger_count,
+               trip_distance,
+               fare_amount,
+               trip_amount,
+               total_amount
+        FROM   (SELECT CASE WHEN LENGTH(SUBSTR("NYC-taxi-trips.csv"."pickup_datetime", 12, LENGTH("NYC-taxi-trips.csv"."pickup_datetime") - 15)) > 0 THEN SUBSTR("NYC-taxi-trips.csv"."pickup_datetime", 12, LENGTH("NYC-taxi-trips.csv"."pickup_datetime") - 15) ELSE NULL END AS pickup_time,
+                       CASE WHEN LENGTH(SUBSTR("NYC-taxi-trips.csv"."pickup_datetime", 1, 10)) > 0 THEN SUBSTR("NYC-taxi-trips.csv"."pickup_datetime", 1, 10) ELSE NULL END AS pickup_date,
+                       CONVERT_TO_INTEGER("NYC-taxi-trips.csv"."passenger_count", 1, 0, 0) AS passenger_count,
+                       CONVERT_TO_FLOAT("NYC-taxi-trips.csv"."trip_distance_mi", 1, 1, 0) AS trip_distance,
+                       CONVERT_TO_FLOAT("NYC-taxi-trips.csv"."fare_amount", 1, 1, 0) AS fare_amount,
+                       CONVERT_TO_FLOAT("NYC-taxi-trips.csv"."tip_amount", 1, 1, 0) AS trip_amount,
+                       CONVERT_TO_FLOAT("NYC-taxi-trips.csv"."total_amount", 1, 1, 0) AS total_amount
+                FROM   Samples."samples.dremio.com"."NYC-taxi-trips.csv" AS "NYC-taxi-trips.csv"
+               ) nested_0
+       ) nested_0;
+
+--Create NYC Weather View
+SELECT station,
+       name,
+       TO_DATE(nested_0."date", 'YYYY-MM-DD', 1) AS "date",
+       awnd,
+       prcp,
+       snow,
+       snwd,
+       tempmax,
+       tempmin
+FROM   (SELECT station,
+               name,
+               CASE WHEN LENGTH(SUBSTR("NYC-weather.csv"."date", 1, 10)) > 0 THEN SUBSTR("NYC-weather.csv"."date", 1, 10) ELSE NULL END AS "date",
+               CONVERT_TO_FLOAT("NYC-weather.csv"."awnd", 1, 1, 0) AS awnd,
+               CONVERT_TO_FLOAT("NYC-weather.csv"."prcp", 1, 1, 0) AS prcp,
+               CONVERT_TO_FLOAT("NYC-weather.csv"."snow", 1, 1, 0) AS snow,
+               CONVERT_TO_FLOAT("NYC-weather.csv"."snwd", 1, 1, 0) AS snwd,
+               CONVERT_TO_FLOAT("NYC-weather.csv"."tempmax", 1, 1, 0) AS tempmax,
+               CONVERT_TO_FLOAT("NYC-weather.csv"."tempmin", 1, 1, 0) AS tempmin
+        FROM   Samples."samples.dremio.com"."NYC-weather.csv" AS "NYC-weather.csv"
+       ) nested_0;
+
+--Create Combined NYC View
+select    t.*,
+          w.*
+from      "@andymadson"."vw_nyc_taxi" t
+left join "@andymadson"."vw_nyc_weather" w
+on        "pickup_date" = "date"
+
