@@ -47,10 +47,3 @@ FROM   (SELECT station,
         FROM   Samples."samples.dremio.com"."NYC-weather.csv" AS "NYC-weather.csv"
        ) nested_0;
 
---Create Combined NYC View
-select    t.*,
-          w.*
-from      "@andymadson"."vw_nyc_taxi" t
-left join "@andymadson"."vw_nyc_weather" w
-on        "pickup_date" = "date"
-
