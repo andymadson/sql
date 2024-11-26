@@ -1,1 +1,1 @@
-These files are resources for the Dremio Data Analyst course on Dremio University.
+These files are resources for the Dremio SQL for Data Analysts course on Dremio University.
